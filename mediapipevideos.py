@@ -68,7 +68,7 @@ while(cap.isOpened()):
         # Prints the list of detected pose landmarks, including their (x, y, z) coordinates and visibility.
       
 
-        if results.pose_landmarks:
+        if results.pose_landmarks and cap.get(cv2.CAP_PROP_POS_FRAMES)%4 ==0 :
             hip = results.pose_landmarks.landmark[mpPose.PoseLandmark.LEFT_HIP]
             ankle = results.pose_landmarks.landmark[mpPose.PoseLandmark.LEFT_ANKLE]
             knee = results.pose_landmarks.landmark[mpPose.PoseLandmark.LEFT_KNEE]
@@ -87,12 +87,17 @@ while(cap.isOpened()):
             hand = results.pose_landmarks.landmark[mpPose.PoseLandmark.RIGHT_WRIST]
             left_elbow = results.pose_landmarks.landmark[mpPose.PoseLandmark.LEFT_ELBOW]
             right_elbow = results.pose_landmarks.landmark[mpPose.PoseLandmark.RIGHT_ELBOW]
+            right_shoulder = results.pose_landmarks.landmark[mpPose.PoseLandmark.RIGHT_SHOULDER]
+            hip_line = (hip.x,hip.y-45)
+            shoulder_to_hip = calculate_angle ((right_shoulder.x,right_shoulder.y),(hip.x,hip.y), hip_line )
+            print (shoulder_to_hip)
             if len(previoushand)> 4:
                 handdifference = hand.x - previoushand[-4][0]
                 if previoushanddifference<0 and handdifference>0:
                     phase = "finish"
                     print ("finish",cap.get(cv2.CAP_PROP_POS_MSEC))
-                
+                    #Back heavy lean at finish
+
                 previoushanddifference = handdifference
                 # Draw the pose landmarks and connections on the image
             previoushand.append((hand.x,hand.y))
