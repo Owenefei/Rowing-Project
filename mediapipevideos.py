@@ -53,6 +53,7 @@ previoushipdifference = 0
 previoushand = [(0,0)]
 previoushanddifference = 0
 phase = ""
+previoushipangle = []
 while(cap.isOpened()):
     # vid_capture.read() method returns a tuple
     #   first element is a bool - if True, you can do processing. Otherwise you should stop.
@@ -88,20 +89,29 @@ while(cap.isOpened()):
             left_elbow = results.pose_landmarks.landmark[mpPose.PoseLandmark.LEFT_ELBOW]
             right_elbow = results.pose_landmarks.landmark[mpPose.PoseLandmark.RIGHT_ELBOW]
             right_shoulder = results.pose_landmarks.landmark[mpPose.PoseLandmark.RIGHT_SHOULDER]
-            hip_line = (hip.x,hip.y-45)
-            shoulder_to_hip = calculate_angle ((right_shoulder.x,right_shoulder.y),(hip.x,hip.y), hip_line )
-            print (shoulder_to_hip)
+            right_ankle = results.pose_landmarks.landmark[mpPose.PoseLandmark.RIGHT_ANKLE]
+            shoulder_to_hip = calculate_angle ((right_shoulder.x,right_shoulder.y),(hip.x,hip.y), (right_ankle.x,right_ankle.y) )
+            #print (shoulder_to_hip)
             if len(previoushand)> 4:
                 handdifference = hand.x - previoushand[-4][0]
                 if previoushanddifference<0 and handdifference>0:
                     phase = "finish"
                     print ("finish",cap.get(cv2.CAP_PROP_POS_MSEC))
+
                     #Back heavy lean at finish
 
                 previoushanddifference = handdifference
                 # Draw the pose landmarks and connections on the image
             previoushand.append((hand.x,hand.y))
-
+            previoushipangle.append(shoulder_to_hip)
+            if shoulder_to_hip <= 90:
+                print("too far forward/hunching")
+            if shoulder_to_hip >= 155:
+                print("leaning back too much")
+            #checking for arm and back leaning before finish
+            right_wrist = results.pose_landmarks.landmark[mpPose.PoseLandmark.RIGHT_WRIST]
+            elbow_angle_change = calculate_angle((right_shoulder.x,right_shoulder.y),(right_elbow.x,right_elbow.y),(right_wrist.x,right_wrist.y))
+            print (elbow_angle_change)
 
             mpDraw.draw_landmarks(frame, results.pose_landmarks, mpPose.POSE_CONNECTIONS)
 
